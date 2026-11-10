@@ -160,7 +160,8 @@
         </div>
         <div class="marcadores" aria-live="polite">
           <div class="marcador"><span>Puntos</span><strong id="puntos">0</strong></div>
-          <div class="marcador"><span>Vidas</span><strong id="vidas">♥ ♥ ♥</strong></div>
+          <div class="marcador"><span>Vidas</span><strong id="vidas">♥ ♥ ♥ ♥</strong></div>
+          <div class="marcador"><span>Meta</span><strong id="meta">0/1400</strong></div>
         </div>
       </header>
 
@@ -168,13 +169,13 @@
         <canvas id="campo" width="960" height="540" aria-label="Campo de juego de acción lateral"></canvas>
         <div class="mensaje" id="mensaje">
           <strong id="titulo-mensaje">¡Misión: Operación Selva!</strong>
-          <span id="texto-mensaje">Avanza por la selva, derrota a los rivales y llega hasta el final. Muévete con A/D o las flechas, salta con W o ↑ y dispara con espacio.</span>
+          <span id="texto-mensaje">Consigue 1400 puntos y derrota al comandante para desbloquear la extracción. Los enemigos te apuntan y hay minas y botiquines en el camino. Muévete con A/D o las flechas, salta con W o ↑ y dispara con espacio.</span>
           <button class="accion" id="boton-empezar" type="button">Comenzar misión</button>
         </div>
       </div>
 
       <div class="acciones">
-        <span class="subtitulo">Objetivo: llegar a la señal de extracción.</span>
+        <span class="subtitulo">Alcanza 1400 puntos, derrota al comandante y escapa. Salta las minas; recoge botiquines.</span>
         <button class="secundario" id="boton-pausa" type="button" disabled>Pausar</button>
       </div>
 
@@ -202,7 +203,8 @@
       const ancho = canvas.width;
       const alto = canvas.height;
       const suelo = 448;
-      const largoNivel = 5200;
+      const largoNivel = 5900;
+      const puntosMeta = 1400;
       const gravedad = 1700;
       const teclas = new Set();
       const plataformas = [
@@ -213,33 +215,52 @@
         { x: 3300, y: 360, w: 170 },
         { x: 4100, y: 340, w: 190 },
       ];
-      const posicionesEnemigos = [460, 820, 1080, 1450, 1760, 2110, 2390, 2770, 3060, 3460, 3780, 4180, 4510, 4830];
+      const posicionesEnemigos = [450, 700, 960, 1220, 1480, 1740, 2000, 2260, 2520, 2780, 3040, 3300, 3560, 3820, 4080, 4340, 4600, 4860, 5120, 5380];
+      const posicionesMinas = [840, 1370, 1910, 2450, 2990, 3530, 4070, 4610, 5150];
+      const posicionesBotiquines = [1630, 3260, 4890];
 
       let jugador;
       let enemigos = [];
       let disparos = [];
       let disparosRivales = [];
+      let minas = [];
+      let botiquines = [];
+      let jefeVencido = false;
       let puntos = 0;
       let estado = "inactivo";
       let camara = 0;
       let ultimoTiempo = 0;
       let raf;
+      let aviso = "";
+      let avisoTiempo = 0;
 
       function iniciar() {
         cancelAnimationFrame(raf);
         jugador = {
           x: 90, y: suelo - 54, w: 34, h: 54, vx: 0, vy: 0,
-          mirando: 1, enSuelo: true, vidas: 3, invulnerable: 0, esperaDisparo: 0,
+          mirando: 1, enSuelo: true, vidas: 4, vidasMaximas: 4, invulnerable: 0, esperaDisparo: 0,
         };
         enemigos = posicionesEnemigos.map((x, i) => ({
-          x, y: suelo - 48, w: 34, h: 48, vidas: 2,
-          velocidad: 36 + (i % 3) * 9, esperaDisparo: 1 + (i % 4) * 0.45,
+          x, y: suelo - 48, w: 34, h: 48, vidas: i % 5 === 4 ? 4 : 3,
+          maxVidas: i % 5 === 4 ? 4 : 3, puntos: 100,
+          velocidad: 58 + (i % 4) * 13, esperaDisparo: 0.8 + (i % 4) * 0.25,
+          intervaloDisparo: i % 3 === 0 ? 1.45 : 1.9,
           activo: true,
         }));
+        enemigos.push({
+          x: 5520, y: suelo - 68, w: 54, h: 68, vidas: 7, maxVidas: 7, puntos: 300,
+          velocidad: 78, esperaDisparo: 0.65, intervaloDisparo: 1.1,
+          activo: true, jefe: true,
+        });
         disparos = [];
         disparosRivales = [];
+        minas = posicionesMinas.map((x) => ({ x, activada: false }));
+        botiquines = posicionesBotiquines.map((x) => ({ x, recogido: false }));
+        jefeVencido = false;
         puntos = 0;
         camara = 0;
+        aviso = "";
+        avisoTiempo = 0;
         teclas.clear();
         actualizarMarcador();
         estado = "jugando";
@@ -309,16 +330,23 @@
         for (const enemigo of enemigos) {
           if (!enemigo.activo) continue;
           const distancia = jugador.x - enemigo.x;
-          if (Math.abs(distancia) < 520) {
+          if (Math.abs(distancia) < 650) {
             enemigo.x += Math.sign(distancia) * enemigo.velocidad * dt;
             enemigo.esperaDisparo -= dt;
-            if (enemigo.esperaDisparo <= 0 && Math.abs(distancia) < 400) {
+            const intensidad = 1 + (jugador.x / largoNivel) * 0.7;
+            if (enemigo.esperaDisparo <= 0 && Math.abs(distancia) < 510) {
+              const origenX = enemigo.x + enemigo.w / 2;
+              const origenY = enemigo.y + 24;
+              const dx = jugador.x + jugador.w / 2 - origenX;
+              const dy = jugador.y + jugador.h / 2 - origenY;
+              const distanciaDisparo = Math.hypot(dx, dy) || 1;
               disparosRivales.push({
-                x: enemigo.x + (distancia > 0 ? enemigo.w : 0),
-                y: enemigo.y + 24,
-                vx: Math.sign(distancia) * 290,
+                x: origenX,
+                y: origenY,
+                vx: (dx / distanciaDisparo) * (enemigo.jefe ? 390 : 320) * intensidad,
+                vy: (dy / distanciaDisparo) * (enemigo.jefe ? 390 : 320) * intensidad,
               });
-              enemigo.esperaDisparo = 2.1 + Math.random() * 1.2;
+              enemigo.esperaDisparo = enemigo.intervaloDisparo / intensidad + Math.random() * 0.35;
             }
           }
 
@@ -327,8 +355,28 @@
           }
         }
 
+        for (const mina of minas) {
+            if (!mina.activada && Math.abs(jugador.x + jugador.w / 2 - mina.x) < 22 &&
+                jugador.y + jugador.h > suelo - 12 && jugador.invulnerable <= 0) {
+              mina.activada = true;
+              recibirGolpe();
+            }
+        }
+
+        for (const botiquin of botiquines) {
+          if (!botiquin.recogido && jugador.vidas < jugador.vidasMaximas &&
+              Math.abs(jugador.x + jugador.w / 2 - botiquin.x) < 24 &&
+              jugador.y + jugador.h > suelo - 28) {
+            botiquin.recogido = true;
+            jugador.vidas += 1;
+            actualizarMarcador();
+            mostrarAviso("¡Botiquín! Recuperaste una vida.");
+          }
+        }
+
         for (const bala of disparos) {
           bala.x += bala.vx * dt;
+          bala.y += (bala.vy || 0) * dt;
           for (const enemigo of enemigos) {
             if (!enemigo.activo) continue;
             if (bala.x >= enemigo.x && bala.x <= enemigo.x + enemigo.w &&
@@ -337,8 +385,16 @@
               enemigo.vidas -= 1;
               if (enemigo.vidas <= 0) {
                 enemigo.activo = false;
-                puntos += 100;
+                if (enemigo.jefe) jefeVencido = true;
+                puntos += enemigo.puntos;
                 actualizarMarcador();
+                if (jefeVencido && puntos >= puntosMeta) {
+                  mostrarAviso("¡Comandante abatido! ¡Extracción desbloqueada!");
+                } else if (enemigo.jefe) {
+                  mostrarAviso(`¡Comandante abatido! Faltan ${Math.max(0, puntosMeta - puntos)} puntos.`);
+                } else if (puntos >= puntosMeta && !jefeVencido) {
+                  mostrarAviso("¡Meta alcanzada! Ahora derrota al comandante.");
+                }
               }
               break;
             }
@@ -348,6 +404,7 @@
 
         for (const bala of disparosRivales) {
           bala.x += bala.vx * dt;
+          bala.y += bala.vy * dt;
           if (bala.x >= jugador.x && bala.x <= jugador.x + jugador.w &&
               bala.y >= jugador.y && bala.y <= jugador.y + jugador.h && jugador.invulnerable <= 0) {
             bala.eliminar = true;
@@ -355,12 +412,25 @@
           }
         }
         disparosRivales = disparosRivales.filter((bala) =>
-          !bala.eliminar && bala.x > camara - 100 && bala.x < camara + ancho + 100);
+          !bala.eliminar && bala.x > camara - 100 && bala.x < camara + ancho + 100 &&
+          bala.y > -50 && bala.y < alto + 50);
 
         jugador.invulnerable = Math.max(0, jugador.invulnerable - dt);
         camara = Math.max(0, Math.min(largoNivel - ancho, jugador.x - ancho * 0.36));
+        avisoTiempo = Math.max(0, avisoTiempo - dt);
 
-        if (jugador.x >= largoNivel - 125) terminar(true);
+        if (jugador.x >= largoNivel - 125) {
+          if (puntos >= puntosMeta && jefeVencido) terminar(true);
+          else {
+            jugador.x = largoNivel - 126;
+            if (avisoTiempo <= 0) {
+              const faltantes = puntosMeta - puntos;
+              mostrarAviso(faltantes > 0
+                ? `Extracción bloqueada: faltan ${faltantes} puntos`
+                : "Extracción bloqueada: derrota al comandante");
+            }
+          }
+        }
       }
 
       function colisiona(a, b) {
@@ -375,9 +445,15 @@
         if (jugador.vidas <= 0) terminar(false);
       }
 
+      function mostrarAviso(texto) {
+        aviso = texto;
+        avisoTiempo = 2.5;
+      }
+
       function actualizarMarcador() {
         puntosElemento.textContent = puntos;
-        vidasElemento.textContent = jugador ? "♥ ".repeat(jugador.vidas).trim() || "—" : "♥ ♥ ♥";
+        vidasElemento.textContent = jugador ? "♥ ".repeat(jugador.vidas).trim() || "—" : "♥ ♥ ♥ ♥";
+        document.querySelector("#meta").textContent = `${Math.min(puntos, puntosMeta)}/${puntosMeta}`;
       }
 
       function terminar(ganaste) {
@@ -386,7 +462,7 @@
         botonPausa.disabled = true;
         tituloMensaje.textContent = ganaste ? "¡Misión cumplida!" : "¡Misión fallida!";
         textoMensaje.textContent = ganaste
-          ? `Llegaste a la extracción con ${puntos} puntos. ¡Buen trabajo, soldado!`
+          ? `Desbloqueaste la extracción con ${puntos} puntos. ¡Buen trabajo, soldado!`
           : `Conseguiste ${puntos} puntos. Reúne valor y vuelve a intentarlo.`;
         botonEmpezar.textContent = "Jugar otra vez";
         mensaje.hidden = false;
@@ -471,8 +547,41 @@
           ctx.fillRect(plataforma.x, plataforma.y, plataforma.w, 5);
         }
 
+        for (const botiquin of botiquines) {
+          if (botiquin.recogido) continue;
+          ctx.fillStyle = "rgba(26, 47, 36, 0.3)";
+          ctx.beginPath();
+          ctx.ellipse(botiquin.x, suelo - 3, 17, 5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#e9f1d0";
+          ctx.fillRect(botiquin.x - 12, suelo - 25, 24, 19);
+          ctx.fillStyle = "#d95745";
+          ctx.fillRect(botiquin.x - 3, suelo - 22, 6, 13);
+          ctx.fillRect(botiquin.x - 7, suelo - 18, 14, 5);
+        }
+
+        for (const mina of minas) {
+          if (mina.activada) continue;
+          ctx.fillStyle = "#392f2d";
+          ctx.beginPath();
+          ctx.ellipse(mina.x, suelo - 5, 15, 7, 0, Math.PI, 0);
+          ctx.fill();
+          ctx.fillStyle = Math.floor(performance.now() / 250) % 2 ? "#ff704f" : "#f7bd4b";
+          ctx.beginPath();
+          ctx.arc(mina.x, suelo - 9, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
         dibujarSenal();
-        for (const enemigo of enemigos) if (enemigo.activo) dibujarPersona(enemigo, true);
+        for (const enemigo of enemigos) {
+          if (!enemigo.activo) continue;
+          if (enemigo.jefe) dibujarJefe(enemigo);
+          else dibujarPersona(enemigo, true);
+          ctx.fillStyle = "#652f2b";
+          ctx.fillRect(enemigo.x, enemigo.y - 9, enemigo.w, 4);
+          ctx.fillStyle = enemigo.jefe ? "#f7bd4b" : "#dd6952";
+          ctx.fillRect(enemigo.x, enemigo.y - 9, enemigo.w * enemigo.vidas / enemigo.maxVidas, 4);
+        }
 
         ctx.fillStyle = "#ffe779";
         for (const bala of disparos) {
@@ -499,6 +608,35 @@
         ctx.fillRect(20, 18, 180, 9);
         ctx.fillStyle = "#f7bd4b";
         ctx.fillRect(20, 18, 180 * progreso, 9);
+        if (avisoTiempo > 0) {
+          ctx.font = "bold 18px system-ui";
+          const anchoAviso = Math.min(ctx.measureText(aviso).width + 30, ancho - 32);
+          ctx.fillStyle = "rgba(16, 25, 30, 0.88)";
+          ctx.fillRect((ancho - anchoAviso) / 2, 42, anchoAviso, 38);
+          ctx.fillStyle = "#fff0bc";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(aviso, ancho / 2, 61, anchoAviso - 16);
+          ctx.textAlign = "start";
+          ctx.textBaseline = "alphabetic";
+        }
+      }
+
+      function dibujarJefe(jefe) {
+        ctx.fillStyle = "#d7a47a";
+        ctx.fillRect(jefe.x + 17, jefe.y + 5, 23, 19);
+        ctx.fillStyle = "#26333a";
+        ctx.fillRect(jefe.x + 12, jefe.y, 34, 11);
+        ctx.fillStyle = "#873f37";
+        ctx.fillRect(jefe.x + 5, jefe.y + 24, 45, 28);
+        ctx.fillStyle = "#d4b14e";
+        ctx.fillRect(jefe.x + 3, jefe.y + 25, 9, 23);
+        ctx.fillRect(jefe.x + 44, jefe.y + 25, 9, 23);
+        ctx.fillStyle = "#303c40";
+        ctx.fillRect(jefe.x + 9, jefe.y + 51, 14, 17);
+        ctx.fillRect(jefe.x + 34, jefe.y + 51, 14, 17);
+        ctx.fillStyle = "#202a30";
+        ctx.fillRect(jefe.x - 12, jefe.y + 31, 29, 7);
       }
 
       function dibujarPersona(persona, rival) {
@@ -543,6 +681,14 @@
         ctx.fillStyle = "#fff0bc";
         ctx.font = "bold 12px system-ui";
         ctx.fillText("SALIDA", x + 12, suelo - 108);
+        if (puntos < puntosMeta || !jefeVencido) {
+          ctx.fillStyle = "#873f37";
+          ctx.fillRect(x - 15, suelo - 76, 11, 76);
+          ctx.fillRect(x + 24, suelo - 76, 11, 76);
+          ctx.fillStyle = "#fff0bc";
+          ctx.font = "bold 11px system-ui";
+          ctx.fillText("BLOQUEADA", x - 27, suelo - 83);
+        }
       }
 
       function asignarTecla(tecla, presionada) {
