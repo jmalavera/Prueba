@@ -44,15 +44,22 @@
         overflow: hidden;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
         border: 3px solid rgba(255,255,255,0.4);
+        display: flex;
       }
 
-      .bandera div {
-        height: 33.33%;
+      .bandera .amarillo {
+        flex: 1;
+        background: var(--amarillo);
       }
 
-      .bandera .amarillo { background: var(--amarillo); }
-      .bandera .azul { background: var(--azul); }
-      .bandera .rojo { background: var(--rojo); }
+      .bandera .mitad-dos {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .bandera .azul { background: var(--azul); height: 50%; }
+      .bandera .rojo { background: var(--rojo); height: 50%; }
 
       .hero h1 {
         margin: 0;
@@ -128,8 +135,10 @@
     <header class="hero">
       <div class="bandera" aria-label="Bandera de Colombia">
         <div class="amarillo"></div>
-        <div class="azul"></div>
-        <div class="rojo"></div>
+        <div class="mitad-dos">
+          <div class="azul"></div>
+          <div class="rojo"></div>
+        </div>
       </div>
       <h1>Colombia</h1>
       <p>Un país de paisajes asombrosos, cultura vibrante y un corazón lleno de tradición.</p>
