@@ -3,10 +3,184 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mi Página</title>
+    <title>Colombia | País de diversidad</title>
+    <style>
+      :root {
+        --verde-oscuro: #0b5d2d;
+        --verde-claro: #dff7e7;
+        --amarillo: #f7d54a;
+        --azul: #1b4ea3;
+        --rojo: #d92027;
+        --blanco: #ffffff;
+        --texto: #1d1d1d;
+        --gris: #f4f4f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: var(--gris);
+        color: var(--texto);
+      }
+
+      .hero {
+        position: relative;
+        background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.25)),
+          url('https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+        color: var(--blanco);
+        text-align: center;
+        padding: 90px 20px 60px;
+      }
+
+      .bandera {
+        width: 200px;
+        height: 120px;
+        margin: 0 auto 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+        border: 3px solid rgba(255,255,255,0.4);
+      }
+
+      .bandera div {
+        height: 33.33%;
+      }
+
+      .bandera .amarillo { background: var(--amarillo); }
+      .bandera .azul { background: var(--azul); }
+      .bandera .rojo { background: var(--rojo); }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        letter-spacing: 1px;
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+        margin-top: 14px;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 20px 60px;
+      }
+
+      .intro {
+        background: var(--verde-claro);
+        border-left: 6px solid var(--verde-oscuro);
+        padding: 20px 24px;
+        border-radius: 12px;
+        font-size: 1.08rem;
+        line-height: 1.8;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-top: 32px;
+      }
+
+      .card {
+        background: var(--blanco);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      }
+
+      .card h2 {
+        margin-top: 0;
+        color: var(--verde-oscuro);
+        font-size: 1.6rem;
+      }
+
+      .card p, .card li {
+        line-height: 1.75;
+        font-size: 1rem;
+      }
+
+      .cities {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+        list-style: none;
+        padding: 0;
+      }
+
+      .cities li {
+        background: #eef9f0;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-weight: bold;
+        text-align: center;
+        color: var(--verde-oscuro);
+      }
+    </style>
   </head>
   <body>
-    <h1>Hola, mundo!</h1>
-    <p>Este es un código HTML básico.</p>
+    <header class="hero">
+      <div class="bandera" aria-label="Bandera de Colombia">
+        <div class="amarillo"></div>
+        <div class="azul"></div>
+        <div class="rojo"></div>
+      </div>
+      <h1>Colombia</h1>
+      <p>Un país de paisajes asombrosos, cultura vibrante y un corazón lleno de tradición.</p>
+    </header>
+
+    <main class="container">
+      <p class="intro">
+        Colombia es un país de Sudamérica reconocido por su increíble diversidad natural,
+        su riqueza cultural, su gastronomía y la calidez de su gente. Desde los Andes hasta
+        laAmazonía, pasando por costas y ciudades históricas, ofrece paisajes que parecen de varios mundos en uno solo.
+      </p>
+
+      <section class="cards">
+        <article class="card">
+          <h2>Geografía</h2>
+          <p>
+            Colombia tiene costas en el océano Pacífico y el mar Caribe, y está atravesada por la
+            cordillera de los Andes. Esto hace que el país tenga montañas, valles, selvas, desiertos,
+            lagunas y ecosistemas muy variados.
+          </p>
+        </article>
+
+        <article class="card">
+          <h2>Cultura</h2>
+          <p>
+            La cultura colombiana es muy rica y diversa. Se destacan la música, como el vallenato y la salsa,
+            la danza, las fiestas populares, las tradiciones regionales y una gastronomía muy apreciada.
+          </p>
+        </article>
+
+        <article class="card">
+          <h2>Datos curiosos</h2>
+          <ul>
+            <li>La capital es Bogotá.</li>
+            <li>Es famoso por su café de alta calidad.</li>
+            <li>Es uno de los países con mayor biodiversidad del mundo.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="card" style="margin-top: 32px;">
+        <h2>Ciudades importantes</h2>
+        <ul class="cities">
+          <li>Bogotá</li>
+          <li>Medellín</li>
+          <li>Cali</li>
+          <li>Cartagena</li>
+          <li>Santa Marta</li>
+          <li>Barranquilla</li>
+        </ul>
+      </section>
+    </main>
   </body>
 </html>
