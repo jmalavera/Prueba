@@ -3,21 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#10251e" />
-    <title>La culebrita</title>
+    <meta name="theme-color" content="#111a24" />
+    <title>Operación Selva — Juego de acción</title>
     <style>
       :root {
         color-scheme: dark;
-        --fondo: #10251e;
-        --panel: #19372c;
-        --verde: #a7f36b;
-        --texto: #f3f7ef;
-        --suave: #b7c8bc;
+        --fondo: #111a24;
+        --panel: #1b2935;
+        --texto: #f5f3e8;
+        --suave: #bdc9c7;
+        --acento: #f7bd4b;
+        --verde: #a7df75;
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
 
       body {
         min-height: 100vh;
@@ -26,76 +25,65 @@
         place-items: center;
         padding: 24px 16px;
         background:
-          radial-gradient(ellipse at top, #244b38 0%, transparent 55%),
+          radial-gradient(ellipse at 50% 0, #263b45 0%, transparent 58%),
           var(--fondo);
         color: var(--texto);
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       }
 
       .juego {
-        width: min(100%, 520px);
-        padding: 28px;
+        width: min(100%, 1000px);
+        padding: clamp(16px, 3vw, 28px);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        background: rgba(25, 55, 44, 0.94);
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+        border-radius: 22px;
+        background: rgba(27, 41, 53, 0.96);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
       }
 
-      header {
+      header, .marcadores, .acciones, .ayuda {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 20px;
+        gap: 14px;
       }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(1.7rem, 6vw, 2.3rem);
-        letter-spacing: -0.04em;
-      }
-
-      .subtitulo {
-        margin: 5px 0 0;
-        color: var(--suave);
-        font-size: 0.95rem;
-      }
+      header { margin-bottom: 16px; }
+      h1 { margin: 0; font-size: clamp(1.45rem, 4vw, 2.15rem); letter-spacing: -0.04em; }
+      .subtitulo { margin: 4px 0 0; color: var(--suave); font-size: 0.92rem; }
+      .marcadores { gap: 8px; }
 
       .marcador {
-        min-width: 82px;
-        padding: 9px 12px;
-        border-radius: 14px;
-        background: #10251e;
+        min-width: 76px;
+        padding: 7px 12px;
+        border-radius: 12px;
+        background: #101923;
         text-align: center;
       }
 
       .marcador span {
         display: block;
         color: var(--suave);
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.09em;
+        font-size: 0.66rem;
+        font-weight: 750;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
-      .marcador strong {
-        color: var(--verde);
-        font-size: 1.4rem;
-      }
+      .marcador strong { color: var(--acento); font-size: 1.15rem; }
 
-      .tablero-marco {
+      .marco {
         position: relative;
         overflow: hidden;
-        border: 2px solid rgba(167, 243, 107, 0.35);
-        border-radius: 16px;
-        background: #122a21;
+        border: 2px solid rgba(247, 189, 75, 0.45);
+        border-radius: 15px;
+        background: #9dc9c2;
       }
 
       canvas {
         display: block;
         width: 100%;
         height: auto;
-        aspect-ratio: 1;
+        aspect-ratio: 16 / 9;
         touch-action: none;
       }
 
@@ -103,98 +91,63 @@
         position: absolute;
         inset: 0;
         display: grid;
-        place-content: center;
-        padding: 20px;
-        background: rgba(12, 31, 23, 0.78);
+        align-content: center;
+        justify-items: center;
+        gap: 10px;
+        padding: 22px;
+        background: rgba(10, 18, 24, 0.78);
         text-align: center;
       }
 
-      .mensaje[hidden] {
-        display: none;
-      }
-
-      .mensaje strong {
-        font-size: 1.4rem;
-      }
-
-      .mensaje span {
-        margin-top: 6px;
-        color: var(--suave);
-      }
-
-      .acciones {
-        display: flex;
-        gap: 10px;
-        margin-top: 16px;
-      }
+      .mensaje[hidden] { display: none; }
+      .mensaje strong { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+      .mensaje span { max-width: 470px; color: var(--suave); line-height: 1.5; }
 
       button {
-        min-height: 46px;
+        min-height: 44px;
         border: 0;
-        border-radius: 12px;
+        border-radius: 11px;
         font: inherit;
         font-weight: 750;
         cursor: pointer;
         touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
       }
 
-      button:focus-visible {
-        outline: 3px solid white;
-        outline-offset: 3px;
+      button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+      .accion { padding: 0 20px; background: var(--acento); color: #222018; }
+      .secundario, .control { background: #344755; color: var(--texto); }
+      .secundario { padding: 0 16px; }
+      .acciones { margin-top: 13px; }
+      .ayuda { justify-content: center; margin: 13px 0 0; color: var(--suave); font-size: 0.85rem; text-align: center; }
+
+      .controles-movil {
+        display: none;
+        grid-template-columns: repeat(5, minmax(42px, 1fr));
+        gap: 8px;
+        margin-top: 15px;
       }
 
-      .accion {
-        flex: 1;
-        background: var(--verde);
-        color: #14251b;
+      .control { min-height: 50px; font-size: 1.2rem; }
+      .control.disparo { background: #96533c; font-size: 0.85rem; }
+      .control.salto { background: #496b49; font-size: 0.85rem; }
+
+      @media (pointer: coarse), (max-width: 680px) {
+        .controles-movil { display: grid; }
+        .ayuda { font-size: 0.78rem; }
       }
 
-      .secundario {
-        padding: 0 16px;
-        background: #2a4b3b;
-        color: var(--texto);
-      }
-
-      .ayuda {
-        margin: 16px 0 0;
-        color: var(--suave);
-        font-size: 0.88rem;
-        line-height: 1.5;
-        text-align: center;
-      }
-
-      .controles {
-        display: grid;
-        grid-template-columns: repeat(3, 54px);
-        grid-template-rows: repeat(2, 48px);
-        justify-content: center;
-        gap: 7px;
-        margin: 18px auto 0;
-      }
-
-      .direccion {
-        background: #2a4b3b;
-        color: var(--texto);
-        font-size: 1.2rem;
-      }
-
-      .arriba { grid-column: 2; grid-row: 1; }
-      .izquierda { grid-column: 1; grid-row: 2; }
-      .abajo { grid-column: 2; grid-row: 2; }
-      .derecha { grid-column: 3; grid-row: 2; }
-
-      @media (max-width: 420px) {
-        .juego {
-          padding: 20px 16px;
-        }
-
-        header {
-          align-items: flex-start;
-        }
-
-        .secundario {
-          padding: 0 12px;
-        }
+      @media (max-width: 520px) {
+        body { padding: 12px 8px; }
+        .juego { padding: 15px 11px; border-radius: 16px; }
+        header { align-items: flex-start; }
+        .marcador { min-width: 58px; padding: 6px 8px; }
+        .marcador span { font-size: 0.58rem; }
+        .marcador strong { font-size: 1rem; }
+        .marcadores { gap: 5px; }
+        .acciones { gap: 8px; }
+        .secundario { padding: 0 12px; }
       }
     </style>
   </head>
@@ -202,228 +155,434 @@
     <main class="juego">
       <header>
         <div>
-          <h1>La culebrita 🐍</h1>
-          <p class="subtitulo">¡Come las manzanas y crece!</p>
+          <h1>Operación Selva</h1>
+          <p class="subtitulo">Avanza, esquiva y despeja el camino.</p>
         </div>
-        <div class="marcador" aria-live="polite">
-          <span>Puntos</span>
-          <strong id="puntos">0</strong>
+        <div class="marcadores" aria-live="polite">
+          <div class="marcador"><span>Puntos</span><strong id="puntos">0</strong></div>
+          <div class="marcador"><span>Vidas</span><strong id="vidas">♥ ♥ ♥</strong></div>
         </div>
       </header>
 
-      <div class="tablero-marco">
-        <canvas id="tablero" width="400" height="400" aria-label="Tablero del juego de la culebrita"></canvas>
+      <div class="marco">
+        <canvas id="campo" width="960" height="540" aria-label="Campo de juego de acción lateral"></canvas>
         <div class="mensaje" id="mensaje">
-          <strong id="titulo-mensaje">¿Listo para jugar?</strong>
-          <span id="texto-mensaje">Presiona «Empezar» para comenzar.</span>
+          <strong id="titulo-mensaje">¡Misión: Operación Selva!</strong>
+          <span id="texto-mensaje">Avanza por la selva, derrota a los rivales y llega hasta el final. Muévete con A/D o las flechas, salta con W o ↑ y dispara con espacio.</span>
+          <button class="accion" id="boton-empezar" type="button">Comenzar misión</button>
         </div>
       </div>
 
       <div class="acciones">
-        <button class="accion" id="boton-empezar" type="button">Empezar</button>
+        <span class="subtitulo">Objetivo: llegar a la señal de extracción.</span>
         <button class="secundario" id="boton-pausa" type="button" disabled>Pausar</button>
       </div>
 
-      <div class="controles" aria-label="Controles de dirección">
-        <button class="direccion arriba" type="button" data-direccion="arriba" aria-label="Arriba">▲</button>
-        <button class="direccion izquierda" type="button" data-direccion="izquierda" aria-label="Izquierda">◀</button>
-        <button class="direccion abajo" type="button" data-direccion="abajo" aria-label="Abajo">▼</button>
-        <button class="direccion derecha" type="button" data-direccion="derecha" aria-label="Derecha">▶</button>
+      <div class="controles-movil" aria-label="Controles táctiles">
+        <button class="control" type="button" data-tecla="left" aria-label="Mover a la izquierda">◀</button>
+        <button class="control" type="button" data-tecla="right" aria-label="Mover a la derecha">▶</button>
+        <button class="control salto" type="button" data-tecla="jump">SALTAR</button>
+        <button class="control disparo" type="button" data-tecla="shoot">DISPARAR</button>
       </div>
 
-      <p class="ayuda">Usa las flechas del teclado o W, A, S, D. En el móvil, toca los botones.</p>
+      <p class="ayuda">Teclado: A/D o ←/→ para moverte · W/↑ para saltar · Espacio para disparar · P para pausar</p>
     </main>
 
     <script>
-      const canvas = document.querySelector("#tablero");
+      const canvas = document.querySelector("#campo");
       const ctx = canvas.getContext("2d");
       const puntosElemento = document.querySelector("#puntos");
+      const vidasElemento = document.querySelector("#vidas");
       const mensaje = document.querySelector("#mensaje");
       const tituloMensaje = document.querySelector("#titulo-mensaje");
       const textoMensaje = document.querySelector("#texto-mensaje");
       const botonEmpezar = document.querySelector("#boton-empezar");
       const botonPausa = document.querySelector("#boton-pausa");
 
-      const cantidad = 20;
-      const celda = canvas.width / cantidad;
-      const direcciones = {
-        arriba: { x: 0, y: -1 },
-        abajo: { x: 0, y: 1 },
-        izquierda: { x: -1, y: 0 },
-        derecha: { x: 1, y: 0 },
-      };
+      const ancho = canvas.width;
+      const alto = canvas.height;
+      const suelo = 448;
+      const largoNivel = 5200;
+      const gravedad = 1700;
+      const teclas = new Set();
+      const plataformas = [
+        { x: 620, y: 365, w: 150 },
+        { x: 1170, y: 345, w: 175 },
+        { x: 1840, y: 365, w: 160 },
+        { x: 2520, y: 335, w: 190 },
+        { x: 3300, y: 360, w: 170 },
+        { x: 4100, y: 340, w: 190 },
+      ];
+      const posicionesEnemigos = [460, 820, 1080, 1450, 1760, 2110, 2390, 2770, 3060, 3460, 3780, 4180, 4510, 4830];
 
-      let serpiente;
-      let comida;
-      let direccion;
-      let direccionSiguiente;
+      let jugador;
+      let enemigos = [];
+      let disparos = [];
+      let disparosRivales = [];
       let puntos = 0;
       let estado = "inactivo";
-      let temporizador;
+      let camara = 0;
+      let ultimoTiempo = 0;
+      let raf;
 
-      function dibujarTablero() {
-        ctx.fillStyle = "#122a21";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.045)";
-        ctx.lineWidth = 1;
-
-        for (let i = 1; i < cantidad; i += 1) {
-          const posicion = i * celda;
-          ctx.beginPath();
-          ctx.moveTo(posicion, 0);
-          ctx.lineTo(posicion, canvas.height);
-          ctx.moveTo(0, posicion);
-          ctx.lineTo(canvas.width, posicion);
-          ctx.stroke();
-        }
-
-        if (!serpiente) return;
-
-        serpiente.forEach((segmento, indice) => {
-          const margen = 2;
-          const x = segmento.x * celda + margen;
-          const y = segmento.y * celda + margen;
-          ctx.fillStyle = indice === 0 ? "#c4ff91" : "#83d950";
-          ctx.beginPath();
-          ctx.roundRect(x, y, celda - margen * 2, celda - margen * 2, 5);
-          ctx.fill();
-
-          if (indice === 0) {
-            ctx.fillStyle = "#17321f";
-            ctx.beginPath();
-            ctx.arc(x + 5, y + 6, 1.5, 0, Math.PI * 2);
-            ctx.arc(x + 12, y + 6, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        });
-
-        if (comida) {
-          ctx.font = `${celda * 0.8}px system-ui`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("🍎", comida.x * celda + celda / 2, comida.y * celda + celda / 2 + 1);
-        }
+      function iniciar() {
+        cancelAnimationFrame(raf);
+        jugador = {
+          x: 90, y: suelo - 54, w: 34, h: 54, vx: 0, vy: 0,
+          mirando: 1, enSuelo: true, vidas: 3, invulnerable: 0, esperaDisparo: 0,
+        };
+        enemigos = posicionesEnemigos.map((x, i) => ({
+          x, y: suelo - 48, w: 34, h: 48, vidas: 2,
+          velocidad: 36 + (i % 3) * 9, esperaDisparo: 1 + (i % 4) * 0.45,
+          activo: true,
+        }));
+        disparos = [];
+        disparosRivales = [];
+        puntos = 0;
+        camara = 0;
+        teclas.clear();
+        actualizarMarcador();
+        estado = "jugando";
+        mensaje.hidden = true;
+        botonEmpezar.textContent = "Reintentar";
+        botonPausa.disabled = false;
+        botonPausa.textContent = "Pausar";
+        ultimoTiempo = performance.now();
+        raf = requestAnimationFrame(ciclo);
       }
 
-      function colocarComida() {
-        const libres = [];
-        for (let y = 0; y < cantidad; y += 1) {
-          for (let x = 0; x < cantidad; x += 1) {
-            if (!serpiente.some((parte) => parte.x === x && parte.y === y)) {
-              libres.push({ x, y });
+      function ciclo(tiempo) {
+        if (estado !== "jugando") return;
+        const dt = Math.min((tiempo - ultimoTiempo) / 1000, 0.033);
+        ultimoTiempo = tiempo;
+        actualizar(dt);
+        dibujar();
+        raf = requestAnimationFrame(ciclo);
+      }
+
+      function actualizar(dt) {
+        const velocidad = 250;
+        jugador.vx = 0;
+        if (teclas.has("left")) { jugador.vx = -velocidad; jugador.mirando = -1; }
+        if (teclas.has("right")) { jugador.vx = velocidad; jugador.mirando = 1; }
+        jugador.x = Math.max(0, Math.min(largoNivel - jugador.w, jugador.x + jugador.vx * dt));
+
+        const yAnterior = jugador.y;
+        jugador.vy += gravedad * dt;
+        jugador.y += jugador.vy * dt;
+        jugador.enSuelo = false;
+
+        if (jugador.y + jugador.h >= suelo) {
+          jugador.y = suelo - jugador.h;
+          jugador.vy = 0;
+          jugador.enSuelo = true;
+        }
+
+        for (const plataforma of plataformas) {
+          const sobrePlataforma = jugador.x + jugador.w > plataforma.x &&
+            jugador.x < plataforma.x + plataforma.w &&
+            yAnterior + jugador.h <= plataforma.y &&
+            jugador.y + jugador.h >= plataforma.y &&
+            jugador.vy >= 0;
+          if (sobrePlataforma) {
+            jugador.y = plataforma.y - jugador.h;
+            jugador.vy = 0;
+            jugador.enSuelo = true;
+          }
+        }
+
+        if ((teclas.has("jump") || teclas.has("up")) && jugador.enSuelo) {
+          jugador.vy = -640;
+          jugador.enSuelo = false;
+        }
+
+        jugador.esperaDisparo -= dt;
+        if (teclas.has("shoot") && jugador.esperaDisparo <= 0) {
+          disparos.push({
+            x: jugador.mirando > 0 ? jugador.x + jugador.w : jugador.x - 12,
+            y: jugador.y + 23,
+            vx: jugador.mirando * 650,
+          });
+          jugador.esperaDisparo = 0.22;
+        }
+
+        for (const enemigo of enemigos) {
+          if (!enemigo.activo) continue;
+          const distancia = jugador.x - enemigo.x;
+          if (Math.abs(distancia) < 520) {
+            enemigo.x += Math.sign(distancia) * enemigo.velocidad * dt;
+            enemigo.esperaDisparo -= dt;
+            if (enemigo.esperaDisparo <= 0 && Math.abs(distancia) < 400) {
+              disparosRivales.push({
+                x: enemigo.x + (distancia > 0 ? enemigo.w : 0),
+                y: enemigo.y + 24,
+                vx: Math.sign(distancia) * 290,
+              });
+              enemigo.esperaDisparo = 2.1 + Math.random() * 1.2;
+            }
+          }
+
+          if (colisiona(jugador, enemigo) && jugador.invulnerable <= 0) {
+            recibirGolpe();
+          }
+        }
+
+        for (const bala of disparos) {
+          bala.x += bala.vx * dt;
+          for (const enemigo of enemigos) {
+            if (!enemigo.activo) continue;
+            if (bala.x >= enemigo.x && bala.x <= enemigo.x + enemigo.w &&
+                bala.y >= enemigo.y && bala.y <= enemigo.y + enemigo.h) {
+              bala.eliminar = true;
+              enemigo.vidas -= 1;
+              if (enemigo.vidas <= 0) {
+                enemigo.activo = false;
+                puntos += 100;
+                actualizarMarcador();
+              }
+              break;
             }
           }
         }
-        comida = libres.length ? libres[Math.floor(Math.random() * libres.length)] : null;
-      }
+        disparos = disparos.filter((bala) => !bala.eliminar && bala.x > camara - 100 && bala.x < camara + ancho + 100);
 
-      function mostrarMensaje(titulo, texto) {
-        tituloMensaje.textContent = titulo;
-        textoMensaje.textContent = texto;
-        mensaje.hidden = false;
-      }
-
-      function empezar() {
-        clearInterval(temporizador);
-        serpiente = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
-        direccion = direcciones.derecha;
-        direccionSiguiente = direccion;
-        puntos = 0;
-        puntosElemento.textContent = puntos;
-        colocarComida();
-        estado = "jugando";
-        mensaje.hidden = true;
-        botonEmpezar.textContent = "Reiniciar";
-        botonPausa.disabled = false;
-        botonPausa.textContent = "Pausar";
-        dibujarTablero();
-        temporizador = setInterval(avanzar, 125);
-      }
-
-      function avanzar() {
-        direccion = direccionSiguiente;
-        const cabeza = {
-          x: serpiente[0].x + direccion.x,
-          y: serpiente[0].y + direccion.y,
-        };
-        const comio = comida && cabeza.x === comida.x && cabeza.y === comida.y;
-        const cuerpo = comio ? serpiente : serpiente.slice(0, -1);
-        const choco = cabeza.x < 0 || cabeza.x >= cantidad ||
-          cabeza.y < 0 || cabeza.y >= cantidad ||
-          cuerpo.some((parte) => parte.x === cabeza.x && parte.y === cabeza.y);
-
-        if (choco) {
-          terminar();
-          return;
-        }
-
-        serpiente.unshift(cabeza);
-        if (comio) {
-          puntos += 1;
-          puntosElemento.textContent = puntos;
-          colocarComida();
-          if (!comida) {
-            terminar("¡Ganaste!", "Llenaste todo el tablero. ¡Increíble!");
-            return;
+        for (const bala of disparosRivales) {
+          bala.x += bala.vx * dt;
+          if (bala.x >= jugador.x && bala.x <= jugador.x + jugador.w &&
+              bala.y >= jugador.y && bala.y <= jugador.y + jugador.h && jugador.invulnerable <= 0) {
+            bala.eliminar = true;
+            recibirGolpe();
           }
-        } else {
-          serpiente.pop();
         }
-        dibujarTablero();
+        disparosRivales = disparosRivales.filter((bala) =>
+          !bala.eliminar && bala.x > camara - 100 && bala.x < camara + ancho + 100);
+
+        jugador.invulnerable = Math.max(0, jugador.invulnerable - dt);
+        camara = Math.max(0, Math.min(largoNivel - ancho, jugador.x - ancho * 0.36));
+
+        if (jugador.x >= largoNivel - 125) terminar(true);
       }
 
-      function terminar(titulo = "¡Fin del juego!", texto = `Conseguiste ${puntos} ${puntos === 1 ? "punto" : "puntos"}. Presiona «Jugar otra vez».`) {
-        clearInterval(temporizador);
-        estado = "terminado";
+      function colisiona(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x &&
+          a.y < b.y + b.h && a.y + a.h > b.y;
+      }
+
+      function recibirGolpe() {
+        jugador.vidas -= 1;
+        jugador.invulnerable = 1.25;
+        actualizarMarcador();
+        if (jugador.vidas <= 0) terminar(false);
+      }
+
+      function actualizarMarcador() {
+        puntosElemento.textContent = puntos;
+        vidasElemento.textContent = jugador ? "♥ ".repeat(jugador.vidas).trim() || "—" : "♥ ♥ ♥";
+      }
+
+      function terminar(ganaste) {
+        estado = ganaste ? "ganado" : "perdido";
+        cancelAnimationFrame(raf);
         botonPausa.disabled = true;
-        mostrarMensaje(titulo, texto);
+        tituloMensaje.textContent = ganaste ? "¡Misión cumplida!" : "¡Misión fallida!";
+        textoMensaje.textContent = ganaste
+          ? `Llegaste a la extracción con ${puntos} puntos. ¡Buen trabajo, soldado!`
+          : `Conseguiste ${puntos} puntos. Reúne valor y vuelve a intentarlo.`;
+        botonEmpezar.textContent = "Jugar otra vez";
+        mensaje.hidden = false;
       }
 
       function pausar() {
         if (estado === "jugando") {
-          clearInterval(temporizador);
           estado = "pausado";
+          teclas.clear();
+          cancelAnimationFrame(raf);
+          tituloMensaje.textContent = "Juego en pausa";
+          textoMensaje.textContent = "Presiona «Continuar» cuando quieras volver a la misión.";
+          botonEmpezar.textContent = "Continuar";
+          mensaje.hidden = false;
           botonPausa.textContent = "Continuar";
-          mostrarMensaje("Juego en pausa", "Presiona «Continuar» cuando quieras seguir.");
         } else if (estado === "pausado") {
           estado = "jugando";
           mensaje.hidden = true;
           botonPausa.textContent = "Pausar";
-          temporizador = setInterval(avanzar, 125);
+          ultimoTiempo = performance.now();
+          raf = requestAnimationFrame(ciclo);
         }
       }
 
-      function cambiarDireccion(nombre) {
-        if (estado !== "jugando") return;
-        const nueva = direcciones[nombre];
-        if (!nueva || (nueva.x + direccion.x === 0 && nueva.y + direccion.y === 0)) return;
-        direccionSiguiente = nueva;
+      function dibujarFondo() {
+        const cielo = ctx.createLinearGradient(0, 0, 0, suelo);
+        cielo.addColorStop(0, "#75b5b0");
+        cielo.addColorStop(1, "#d5d49b");
+        ctx.fillStyle = cielo;
+        ctx.fillRect(0, 0, ancho, alto);
+
+        ctx.fillStyle = "rgba(255, 237, 165, 0.85)";
+        ctx.beginPath();
+        ctx.arc(760, 105, 42, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(-camara * 0.22, 0);
+        for (let i = 0; i < 10; i += 1) {
+          const x = i * 620 - 80;
+          ctx.fillStyle = i % 2 ? "#729b7b" : "#628b72";
+          ctx.beginPath();
+          ctx.moveTo(x, suelo);
+          ctx.lineTo(x + 180, 190 + (i % 3) * 22);
+          ctx.lineTo(x + 420, suelo);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(-camara * 0.55, 0);
+        for (let x = -100; x < largoNivel + 300; x += 190) {
+          const altura = 110 + ((x / 190) % 3) * 18;
+          ctx.fillStyle = "#526e4e";
+          ctx.fillRect(x + 45, suelo - altura, 18, altura);
+          ctx.fillStyle = "#315d4a";
+          ctx.beginPath();
+          ctx.arc(x + 54, suelo - altura, 48, 0, Math.PI * 2);
+          ctx.arc(x + 24, suelo - altura + 25, 34, 0, Math.PI * 2);
+          ctx.arc(x + 82, suelo - altura + 26, 37, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
       }
 
-      const teclas = {
-        ArrowUp: "arriba", w: "arriba", W: "arriba",
-        ArrowDown: "abajo", s: "abajo", S: "abajo",
-        ArrowLeft: "izquierda", a: "izquierda", A: "izquierda",
-        ArrowRight: "derecha", d: "derecha", D: "derecha",
-      };
+      function dibujar() {
+        dibujarFondo();
+        ctx.save();
+        ctx.translate(-camara, 0);
+
+        ctx.fillStyle = "#53483a";
+        ctx.fillRect(0, suelo, largoNivel, alto - suelo);
+        ctx.fillStyle = "#70894b";
+        ctx.fillRect(0, suelo, largoNivel, 15);
+        ctx.fillStyle = "#89905a";
+        for (let x = 0; x < largoNivel; x += 82) ctx.fillRect(x, suelo + 20, 42, 4);
+
+        for (const plataforma of plataformas) {
+          ctx.fillStyle = "#554a3a";
+          ctx.fillRect(plataforma.x, plataforma.y, plataforma.w, 15);
+          ctx.fillStyle = "#8a9b57";
+          ctx.fillRect(plataforma.x, plataforma.y, plataforma.w, 5);
+        }
+
+        dibujarSenal();
+        for (const enemigo of enemigos) if (enemigo.activo) dibujarPersona(enemigo, true);
+
+        ctx.fillStyle = "#ffe779";
+        for (const bala of disparos) {
+          ctx.fillRect(bala.x - 7, bala.y - 2, 14, 4);
+          ctx.fillStyle = "#fff4b0";
+          ctx.fillRect(bala.x - 3, bala.y - 1, 7, 2);
+          ctx.fillStyle = "#ffe779";
+        }
+
+        ctx.fillStyle = "#ff8865";
+        for (const bala of disparosRivales) {
+          ctx.beginPath();
+          ctx.arc(bala.x, bala.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (jugador && (jugador.invulnerable <= 0 || Math.floor(performance.now() / 90) % 2 === 0)) {
+          dibujarPersona(jugador, false);
+        }
+        ctx.restore();
+
+        const progreso = jugador ? Math.min(jugador.x / (largoNivel - 125), 1) : 0;
+        ctx.fillStyle = "rgba(12, 24, 25, 0.7)";
+        ctx.fillRect(20, 18, 180, 9);
+        ctx.fillStyle = "#f7bd4b";
+        ctx.fillRect(20, 18, 180 * progreso, 9);
+      }
+
+      function dibujarPersona(persona, rival) {
+        const x = persona.x;
+        const y = persona.y;
+        const mirando = rival ? Math.sign(jugador.x - x) || -1 : jugador.mirando;
+        const color = rival ? "#873f37" : "#355c48";
+        const paso = Math.abs(persona.vx || 0) > 0 ? Math.sin(performance.now() / 75) * 3 : 0;
+
+        ctx.fillStyle = "rgba(25, 31, 24, 0.23)";
+        ctx.beginPath();
+        ctx.ellipse(x + persona.w / 2, suelo + 3, 21, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#d7a47a";
+        ctx.fillRect(x + 10, y + 3, 15, 15);
+        ctx.fillStyle = "#26333a";
+        ctx.fillRect(x + 8, y, 19, 7);
+        ctx.fillStyle = color;
+        ctx.fillRect(x + 6, y + 18, 24, 20);
+        ctx.fillStyle = "#303c40";
+        ctx.fillRect(x + 8, y + 37, 8, 15 + paso);
+        ctx.fillRect(x + 21, y + 37, 8, 15 - paso);
+
+        ctx.fillStyle = "#d7a47a";
+        ctx.fillRect(mirando > 0 ? x + 24 : x + 1, y + 22, 9, 6);
+        ctx.fillStyle = "#202a30";
+        ctx.fillRect(mirando > 0 ? x + 26 : x - 11, y + 22, 19, 5);
+      }
+
+      function dibujarSenal() {
+        const x = largoNivel - 95;
+        ctx.fillStyle = "#35413c";
+        ctx.fillRect(x, suelo - 135, 7, 135);
+        ctx.fillStyle = "#f7bd4b";
+        ctx.beginPath();
+        ctx.moveTo(x + 7, suelo - 132);
+        ctx.lineTo(x + 68, suelo - 113);
+        ctx.lineTo(x + 7, suelo - 94);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#fff0bc";
+        ctx.font = "bold 12px system-ui";
+        ctx.fillText("SALIDA", x + 12, suelo - 108);
+      }
+
+      function asignarTecla(tecla, presionada) {
+        if (["ArrowLeft", "a", "A"].includes(tecla)) presionada ? teclas.add("left") : teclas.delete("left");
+        if (["ArrowRight", "d", "D"].includes(tecla)) presionada ? teclas.add("right") : teclas.delete("right");
+        if (["ArrowUp", "w", "W"].includes(tecla)) presionada ? teclas.add("up") : teclas.delete("up");
+        if (tecla === " " || tecla === "Spacebar") presionada ? teclas.add("shoot") : teclas.delete("shoot");
+      }
 
       document.addEventListener("keydown", (evento) => {
-        if (teclas[evento.key]) {
-          evento.preventDefault();
-          cambiarDireccion(teclas[evento.key]);
-        } else if (evento.key === " " && estado === "jugando") {
-          evento.preventDefault();
-          pausar();
-        }
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", " "].includes(evento.key)) evento.preventDefault();
+        asignarTecla(evento.key, true);
+        if ((evento.key === "p" || evento.key === "P") && estado !== "inactivo") pausar();
+        if ((evento.key === "Enter" || evento.key === " ") && estado === "inactivo") iniciar();
+        if (evento.key === "Enter" && (estado === "perdido" || estado === "ganado")) iniciar();
       });
 
-      document.querySelectorAll("[data-direccion]").forEach((boton) => {
-        boton.addEventListener("click", () => cambiarDireccion(boton.dataset.direccion));
+      document.addEventListener("keyup", (evento) => asignarTecla(evento.key, false));
+      window.addEventListener("blur", () => teclas.clear());
+
+      document.querySelectorAll("[data-tecla]").forEach((boton) => {
+        const tecla = boton.dataset.tecla;
+        const presionar = (evento) => {
+          evento.preventDefault();
+          teclas.add(tecla);
+          boton.setPointerCapture(evento.pointerId);
+        };
+        const soltar = () => teclas.delete(tecla);
+        boton.addEventListener("pointerdown", presionar);
+        boton.addEventListener("pointerup", soltar);
+        boton.addEventListener("pointercancel", soltar);
+        boton.addEventListener("lostpointercapture", soltar);
       });
 
-      botonEmpezar.addEventListener("click", empezar);
+      botonEmpezar.addEventListener("click", () => {
+        if (estado === "pausado") pausar();
+        else iniciar();
+      });
       botonPausa.addEventListener("click", pausar);
-      dibujarTablero();
+      dibujar();
     </script>
   </body>
 </html>
