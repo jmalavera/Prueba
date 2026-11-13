@@ -156,11 +156,12 @@
       <header>
         <div>
           <h1>Operación Selva</h1>
-          <p class="subtitulo">Avanza, esquiva y despeja el camino.</p>
+          <p class="subtitulo" id="nombre-nivel">Cinco niveles de dificultad creciente</p>
         </div>
         <div class="marcadores" aria-live="polite">
           <div class="marcador"><span>Puntos</span><strong id="puntos">0</strong></div>
           <div class="marcador"><span>Vidas</span><strong id="vidas">♥ ♥ ♥ ♥</strong></div>
+          <div class="marcador"><span>Nivel</span><strong id="nivel">1/5</strong></div>
           <div class="marcador"><span>Meta</span><strong id="meta">0/1400</strong></div>
         </div>
       </header>
@@ -169,13 +170,13 @@
         <canvas id="campo" width="960" height="540" aria-label="Campo de juego de acción lateral"></canvas>
         <div class="mensaje" id="mensaje">
           <strong id="titulo-mensaje">¡Misión: Operación Selva!</strong>
-          <span id="texto-mensaje">Consigue 1400 puntos y derrota al comandante para desbloquear la extracción. Los enemigos te apuntan y hay minas y botiquines en el camino. Muévete con A/D o las flechas, salta con W o ↑ y dispara con espacio.</span>
+          <span id="texto-mensaje">Supera cinco escenarios distintos. En cada nivel consigue 1400 puntos y derrota al jefe para desbloquear la extracción. Cada etapa será más difícil.</span>
           <button class="accion" id="boton-empezar" type="button">Comenzar misión</button>
         </div>
       </div>
 
       <div class="acciones">
-        <span class="subtitulo">Alcanza 1400 puntos, derrota al comandante y escapa. Salta las minas; recoge botiquines.</span>
+        <span class="subtitulo" id="objetivo">En cada nivel: consigue 1400 puntos, derrota al jefe y escapa. Salta las minas.</span>
         <button class="secundario" id="boton-pausa" type="button" disabled>Pausar</button>
       </div>
 
@@ -194,6 +195,9 @@
       const ctx = canvas.getContext("2d");
       const puntosElemento = document.querySelector("#puntos");
       const vidasElemento = document.querySelector("#vidas");
+      const nivelElemento = document.querySelector("#nivel");
+      const nombreNivelElemento = document.querySelector("#nombre-nivel");
+      const objetivoElemento = document.querySelector("#objetivo");
       const mensaje = document.querySelector("#mensaje");
       const tituloMensaje = document.querySelector("#titulo-mensaje");
       const textoMensaje = document.querySelector("#texto-mensaje");
@@ -203,22 +207,56 @@
       const ancho = canvas.width;
       const alto = canvas.height;
       const suelo = 448;
-      const largoNivel = 5900;
       const puntosMeta = 1400;
       const gravedad = 1700;
       const teclas = new Set();
-      const plataformas = [
-        { x: 620, y: 365, w: 150 },
-        { x: 1170, y: 345, w: 175 },
-        { x: 1840, y: 365, w: 160 },
-        { x: 2520, y: 335, w: 190 },
-        { x: 3300, y: 360, w: 170 },
-        { x: 4100, y: 340, w: 190 },
+      const niveles = [
+        {
+          nombre: "1. Selva Esmeralda", terreno: "#53483a", hierba: "#70894b",
+          cielo: ["#75b5b0", "#d5d49b"], montana: "#729b7b", arbol: "#315d4a",
+          largo: 3900, enemigos: [430, 690, 950, 1210, 1470, 1730, 1990, 2250, 2510, 2770, 3030, 3290],
+          minas: [820, 1510, 2240, 2940], botiquines: [1660, 2800],
+          plataformas: [{ x: 570, y: 365, w: 145 }, { x: 1080, y: 345, w: 160 }, { x: 1830, y: 360, w: 150 }, { x: 2570, y: 335, w: 180 }],
+          vidaEnemigo: 3, velocidad: 58, intervalo: 1.9, velocidadBala: 300, vidasJefe: 6,
+        },
+        {
+          nombre: "2. Cañón Rojo", terreno: "#59433b", hierba: "#a76b43",
+          cielo: ["#d9875e", "#f0c27b"], montana: "#bd8059", arbol: "#6d493e",
+          largo: 4300, enemigos: [410, 650, 900, 1150, 1400, 1650, 1900, 2150, 2400, 2650, 2900, 3150, 3400, 3650],
+          minas: [760, 1270, 1810, 2330, 2850, 3370], botiquines: [1530, 3170],
+          plataformas: [{ x: 510, y: 350, w: 130 }, { x: 970, y: 325, w: 150 }, { x: 1580, y: 365, w: 130 }, { x: 2200, y: 315, w: 160 }, { x: 2820, y: 350, w: 140 }, { x: 3450, y: 325, w: 150 }],
+          vidaEnemigo: 3, velocidad: 70, intervalo: 1.6, velocidadBala: 330, vidasJefe: 8,
+        },
+        {
+          nombre: "3. Ruinas Perdidas", terreno: "#45434c", hierba: "#737b56",
+          cielo: ["#777ca3", "#d0a878"], montana: "#85819a", arbol: "#4b5148",
+          largo: 4700, enemigos: [420, 660, 900, 1140, 1380, 1620, 1860, 2100, 2340, 2580, 2820, 3060, 3300, 3540, 3780, 4020],
+          minas: [730, 1240, 1740, 2260, 2780, 3300, 3820], botiquines: [1490, 3010, 3920],
+          plataformas: [{ x: 540, y: 350, w: 150 }, { x: 920, y: 315, w: 130 }, { x: 1450, y: 360, w: 155 }, { x: 2030, y: 325, w: 130 }, { x: 2570, y: 300, w: 170 }, { x: 3160, y: 350, w: 150 }, { x: 3730, y: 315, w: 160 }],
+          vidaEnemigo: 4, velocidad: 79, intervalo: 1.4, velocidadBala: 360, vidasJefe: 10,
+        },
+        {
+          nombre: "4. Volcán en Llamas", terreno: "#453735", hierba: "#b65e3b",
+          cielo: ["#8a484b", "#e99358"], montana: "#a3594b", arbol: "#603b38",
+          largo: 5100, enemigos: [400, 635, 870, 1105, 1340, 1575, 1810, 2045, 2280, 2515, 2750, 2985, 3220, 3455, 3690, 3925, 4160, 4395],
+          minas: [700, 1170, 1640, 2110, 2580, 3050, 3520, 3990, 4460], botiquines: [1430, 2870, 4230],
+          plataformas: [{ x: 500, y: 340, w: 130 }, { x: 880, y: 305, w: 145 }, { x: 1370, y: 360, w: 120 }, { x: 1890, y: 315, w: 145 }, { x: 2390, y: 285, w: 160 }, { x: 2920, y: 340, w: 125 }, { x: 3420, y: 300, w: 150 }, { x: 3990, y: 330, w: 140 }, { x: 4440, y: 300, w: 150 }],
+          vidaEnemigo: 4, velocidad: 91, intervalo: 1.2, velocidadBala: 390, vidasJefe: 12,
+        },
+        {
+          nombre: "5. Fortaleza Final", terreno: "#343d45", hierba: "#64735c",
+          cielo: ["#4c627d", "#bf8b68"], montana: "#657687", arbol: "#394c4c",
+          largo: 5500, enemigos: [390, 620, 850, 1080, 1310, 1540, 1770, 2000, 2230, 2460, 2690, 2920, 3150, 3380, 3610, 3840, 4070, 4300, 4530, 4760],
+          minas: [680, 1120, 1560, 2000, 2440, 2880, 3320, 3760, 4200, 4640], botiquines: [1370, 2730, 4100, 4840],
+          plataformas: [{ x: 470, y: 330, w: 125 }, { x: 820, y: 295, w: 140 }, { x: 1280, y: 350, w: 120 }, { x: 1710, y: 300, w: 135 }, { x: 2160, y: 275, w: 150 }, { x: 2600, y: 330, w: 120 }, { x: 3040, y: 290, w: 140 }, { x: 3490, y: 260, w: 155 }, { x: 3960, y: 320, w: 120 }, { x: 4400, y: 280, w: 150 }, { x: 4790, y: 310, w: 130 }],
+          vidaEnemigo: 5, velocidad: 105, intervalo: 1.0, velocidadBala: 425, vidasJefe: 15,
+        },
       ];
-      const posicionesEnemigos = [450, 700, 960, 1220, 1480, 1740, 2000, 2260, 2520, 2780, 3040, 3300, 3560, 3820, 4080, 4340, 4600, 4860, 5120, 5380];
-      const posicionesMinas = [840, 1370, 1910, 2450, 2990, 3530, 4070, 4610, 5150];
-      const posicionesBotiquines = [1630, 3260, 4890];
 
+      let numeroNivel = 0;
+      let nivelActual = niveles[0];
+      let largoNivel = nivelActual.largo;
+      let plataformas = nivelActual.plataformas;
       let jugador;
       let enemigos = [];
       let disparos = [];
@@ -235,27 +273,39 @@
       let avisoTiempo = 0;
 
       function iniciar() {
+        cargarNivel(0, 4);
+      }
+
+      function cargarNivel(indice, vidas) {
         cancelAnimationFrame(raf);
+        numeroNivel = indice;
+        nivelActual = niveles[numeroNivel];
+        largoNivel = nivelActual.largo;
+        plataformas = nivelActual.plataformas;
         jugador = {
           x: 90, y: suelo - 54, w: 34, h: 54, vx: 0, vy: 0,
-          mirando: 1, enSuelo: true, vidas: 4, vidasMaximas: 4, invulnerable: 0, esperaDisparo: 0,
+          mirando: 1, enSuelo: true, vidas, vidasMaximas: 4, invulnerable: 0, esperaDisparo: 0,
         };
-        enemigos = posicionesEnemigos.map((x, i) => ({
-          x, y: suelo - 48, w: 34, h: 48, vidas: i % 5 === 4 ? 4 : 3,
-          maxVidas: i % 5 === 4 ? 4 : 3, puntos: 100,
-          velocidad: 58 + (i % 4) * 13, esperaDisparo: 0.8 + (i % 4) * 0.25,
-          intervaloDisparo: i % 3 === 0 ? 1.45 : 1.9,
+        enemigos = nivelActual.enemigos.map((x, i) => ({
+          x, y: suelo - 48, w: 34, h: 48,
+          vidas: nivelActual.vidaEnemigo + (i % 5 === 4 ? 1 : 0),
+          maxVidas: nivelActual.vidaEnemigo + (i % 5 === 4 ? 1 : 0), puntos: 100,
+          velocidad: nivelActual.velocidad + (i % 3) * 9,
+          esperaDisparo: 0.9 + (i % 4) * 0.2,
+          intervaloDisparo: nivelActual.intervalo + (i % 3) * 0.12,
           activo: true,
         }));
         enemigos.push({
-          x: 5520, y: suelo - 68, w: 54, h: 68, vidas: 7, maxVidas: 7, puntos: 300,
-          velocidad: 78, esperaDisparo: 0.65, intervaloDisparo: 1.1,
+          x: nivelActual.largo - 430, y: suelo - 68, w: 54, h: 68,
+          vidas: nivelActual.vidasJefe, maxVidas: nivelActual.vidasJefe, puntos: 300,
+          velocidad: nivelActual.velocidad + 20, esperaDisparo: 0.65,
+          intervaloDisparo: Math.max(0.7, nivelActual.intervalo - 0.25),
           activo: true, jefe: true,
         });
         disparos = [];
         disparosRivales = [];
-        minas = posicionesMinas.map((x) => ({ x, activada: false }));
-        botiquines = posicionesBotiquines.map((x) => ({ x, recogido: false }));
+        minas = nivelActual.minas.map((x) => ({ x, activada: false }));
+        botiquines = nivelActual.botiquines.map((x) => ({ x, recogido: false }));
         jefeVencido = false;
         puntos = 0;
         camara = 0;
@@ -264,6 +314,8 @@
         teclas.clear();
         actualizarMarcador();
         estado = "jugando";
+        nombreNivelElemento.textContent = nivelActual.nombre;
+        objetivoElemento.textContent = `Nivel ${numeroNivel + 1}: consigue ${puntosMeta} puntos, derrota al jefe y escapa.`;
         mensaje.hidden = true;
         botonEmpezar.textContent = "Reintentar";
         botonPausa.disabled = false;
@@ -343,8 +395,8 @@
               disparosRivales.push({
                 x: origenX,
                 y: origenY,
-                vx: (dx / distanciaDisparo) * (enemigo.jefe ? 390 : 320) * intensidad,
-                vy: (dy / distanciaDisparo) * (enemigo.jefe ? 390 : 320) * intensidad,
+                vx: (dx / distanciaDisparo) * (enemigo.jefe ? 390 : nivelActual.velocidadBala) * intensidad,
+                vy: (dy / distanciaDisparo) * (enemigo.jefe ? 390 : nivelActual.velocidadBala) * intensidad,
               });
               enemigo.esperaDisparo = enemigo.intervaloDisparo / intensidad + Math.random() * 0.35;
             }
@@ -357,9 +409,9 @@
 
         for (const mina of minas) {
             if (!mina.activada && Math.abs(jugador.x + jugador.w / 2 - mina.x) < 22 &&
-                jugador.y + jugador.h > suelo - 12 && jugador.invulnerable <= 0) {
+                jugador.y + jugador.h > suelo - 12) {
               mina.activada = true;
-              recibirGolpe();
+              if (jugador.invulnerable <= 0) recibirGolpe();
             }
         }
 
@@ -420,7 +472,7 @@
         avisoTiempo = Math.max(0, avisoTiempo - dt);
 
         if (jugador.x >= largoNivel - 125) {
-          if (puntos >= puntosMeta && jefeVencido) terminar(true);
+          if (puntos >= puntosMeta && jefeVencido) completarNivel();
           else {
             jugador.x = largoNivel - 126;
             if (avisoTiempo <= 0) {
@@ -454,6 +506,28 @@
         puntosElemento.textContent = puntos;
         vidasElemento.textContent = jugador ? "♥ ".repeat(jugador.vidas).trim() || "—" : "♥ ♥ ♥ ♥";
         document.querySelector("#meta").textContent = `${Math.min(puntos, puntosMeta)}/${puntosMeta}`;
+        nivelElemento.textContent = `${numeroNivel + 1}/${niveles.length}`;
+      }
+
+      function completarNivel() {
+        cancelAnimationFrame(raf);
+        botonPausa.disabled = true;
+        teclas.clear();
+        if (numeroNivel === niveles.length - 1) {
+          terminar(true);
+          return;
+        }
+
+        estado = "nivel-completado";
+        tituloMensaje.textContent = `¡Nivel ${numeroNivel + 1} superado!`;
+        textoMensaje.textContent = `Terminaste ${nivelActual.nombre} con ${puntos} puntos. Recuperarás una vida para el siguiente escenario: ${niveles[numeroNivel + 1].nombre}.`;
+        botonEmpezar.textContent = "Siguiente nivel";
+        mensaje.hidden = false;
+      }
+
+      function siguienteNivel() {
+        const vidas = Math.min(jugador.vidasMaximas, jugador.vidas + 1);
+        cargarNivel(numeroNivel + 1, vidas);
       }
 
       function terminar(ganaste) {
@@ -462,8 +536,8 @@
         botonPausa.disabled = true;
         tituloMensaje.textContent = ganaste ? "¡Misión cumplida!" : "¡Misión fallida!";
         textoMensaje.textContent = ganaste
-          ? `Desbloqueaste la extracción con ${puntos} puntos. ¡Buen trabajo, soldado!`
-          : `Conseguiste ${puntos} puntos. Reúne valor y vuelve a intentarlo.`;
+          ? `¡Completaste los cinco niveles de Operación Selva! Puntuación final: ${puntos} puntos.`
+          : `Caíste en ${nivelActual.nombre} con ${puntos} puntos. Conserva las vidas y vuelve a intentarlo.`;
         botonEmpezar.textContent = "Jugar otra vez";
         mensaje.hidden = false;
       }
@@ -489,8 +563,8 @@
 
       function dibujarFondo() {
         const cielo = ctx.createLinearGradient(0, 0, 0, suelo);
-        cielo.addColorStop(0, "#75b5b0");
-        cielo.addColorStop(1, "#d5d49b");
+        cielo.addColorStop(0, nivelActual.cielo[0]);
+        cielo.addColorStop(1, nivelActual.cielo[1]);
         ctx.fillStyle = cielo;
         ctx.fillRect(0, 0, ancho, alto);
 
@@ -503,7 +577,7 @@
         ctx.translate(-camara * 0.22, 0);
         for (let i = 0; i < 10; i += 1) {
           const x = i * 620 - 80;
-          ctx.fillStyle = i % 2 ? "#729b7b" : "#628b72";
+          ctx.fillStyle = nivelActual.montana;
           ctx.beginPath();
           ctx.moveTo(x, suelo);
           ctx.lineTo(x + 180, 190 + (i % 3) * 22);
@@ -518,7 +592,7 @@
           const altura = 110 + ((x / 190) % 3) * 18;
           ctx.fillStyle = "#526e4e";
           ctx.fillRect(x + 45, suelo - altura, 18, altura);
-          ctx.fillStyle = "#315d4a";
+          ctx.fillStyle = nivelActual.arbol;
           ctx.beginPath();
           ctx.arc(x + 54, suelo - altura, 48, 0, Math.PI * 2);
           ctx.arc(x + 24, suelo - altura + 25, 34, 0, Math.PI * 2);
@@ -533,9 +607,9 @@
         ctx.save();
         ctx.translate(-camara, 0);
 
-        ctx.fillStyle = "#53483a";
+        ctx.fillStyle = nivelActual.terreno;
         ctx.fillRect(0, suelo, largoNivel, alto - suelo);
-        ctx.fillStyle = "#70894b";
+        ctx.fillStyle = nivelActual.hierba;
         ctx.fillRect(0, suelo, largoNivel, 15);
         ctx.fillStyle = "#89905a";
         for (let x = 0; x < largoNivel; x += 82) ctx.fillRect(x, suelo + 20, 42, 4);
@@ -543,7 +617,7 @@
         for (const plataforma of plataformas) {
           ctx.fillStyle = "#554a3a";
           ctx.fillRect(plataforma.x, plataforma.y, plataforma.w, 15);
-          ctx.fillStyle = "#8a9b57";
+          ctx.fillStyle = nivelActual.hierba;
           ctx.fillRect(plataforma.x, plataforma.y, plataforma.w, 5);
         }
 
@@ -703,6 +777,7 @@
         asignarTecla(evento.key, true);
         if ((evento.key === "p" || evento.key === "P") && estado !== "inactivo") pausar();
         if ((evento.key === "Enter" || evento.key === " ") && estado === "inactivo") iniciar();
+        if (evento.key === "Enter" && estado === "nivel-completado") siguienteNivel();
         if (evento.key === "Enter" && (estado === "perdido" || estado === "ganado")) iniciar();
       });
 
@@ -725,6 +800,7 @@
 
       botonEmpezar.addEventListener("click", () => {
         if (estado === "pausado") pausar();
+        else if (estado === "nivel-completado") siguienteNivel();
         else iniciar();
       });
       botonPausa.addEventListener("click", pausar);
